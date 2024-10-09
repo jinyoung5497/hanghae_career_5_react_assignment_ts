@@ -1,20 +1,20 @@
-import { Card, CardContent } from '@/components/ui/card';
-import { Loader2 } from 'lucide-react';
-import { Suspense } from 'react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 
-import { ApiErrorBoundary } from '@/pages/common/components/ApiErrorBoundary';
+import { ApiErrorBoundary } from "@/pages/common/components/ApiErrorBoundary";
 import {
   setCategoryId,
   setMaxPrice,
   setMinPrice,
   setTitle,
-} from '@/store/filter/filterActions';
-import { selectFilter } from '@/store/filter/filterSelectors';
-import { useAppDispatch, useAppSelector } from '@/store/hooks';
-import { debounce } from '@/utils/common';
-import { CategoryRadioGroup } from './CategoryRadioGroup';
-import { PriceRange } from './PriceRange';
-import { SearchBar } from './SearchBar';
+} from "@/store/filter/filterActions";
+import { selectFilter } from "@/store/filter/filterSelectors";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { debounce } from "@/utils/common";
+import { CategoryRadioGroup } from "./CategoryRadioGroup";
+import { PriceRange } from "./PriceRange";
+import { SearchBar } from "./SearchBar";
 
 interface ProductFilterBoxProps {
   children: React.ReactNode;
@@ -34,15 +34,15 @@ export const ProductFilter = () => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       dispatch(setTitle(e.target.value));
     },
-    300
+    300,
   );
 
   const handlePriceChange = (
-    actionCreator: typeof setMinPrice | typeof setMaxPrice
+    actionCreator: typeof setMinPrice | typeof setMaxPrice,
   ) =>
     debounce((e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.value;
-      if (value === '') {
+      if (value === "") {
         dispatch(actionCreator(-1));
       } else {
         const numericValue = Math.max(0, parseInt(value, 10));
@@ -59,7 +59,7 @@ export const ProductFilter = () => {
     if (value !== undefined) {
       dispatch(setCategoryId(value));
     } else {
-      console.error('카테고리가 설정되지 않았습니다.');
+      console.error("카테고리가 설정되지 않았습니다.");
     }
   };
 
