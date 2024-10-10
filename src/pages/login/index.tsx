@@ -21,7 +21,7 @@ interface FormErrors {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  // const dispatch = useAppDispatch();
+  const { setIsLogin, setUser } = useAuthStore();
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -60,9 +60,6 @@ export const LoginPage = () => {
         const token = await user.getIdToken();
 
         Cookies.set('accessToken', token, { expires: 7 });
-
-        // Zustand를 사용하여 상태 업데이트
-        const { setIsLogin, setUser } = useAuthStore();
 
         setIsLogin(true);
         if (user) {

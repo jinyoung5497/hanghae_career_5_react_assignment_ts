@@ -8,11 +8,8 @@ import { useNavigate } from 'react-router-dom';
 import { pageRoutes } from '@/apiRoutes';
 import { EMAIL_PATTERN } from '@/constants';
 import { Layout, authStatusType } from '@/pages/common/components/Layout';
-import { RootState } from '@/store';
-// import { registerUser } from '@/store/auth/authActions';
-import { useAppDispatch } from '@/store/hooks';
-import useRegisterUser from '@/hooks/useAuth';
-import { useAuthStore } from '@/store_zustand/auth/authStore';
+
+import { useRegisterUser } from '@/hooks/useAuth';
 
 interface FormErrors {
   name?: string;
@@ -22,9 +19,14 @@ interface FormErrors {
 
 export const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
-  // const dispatch = useAppDispatch();
-  const { registerStatus, registerError } = useAuthStore();
-  const mutation = useRegisterUser();
+
+  const {
+    mutate: registerUser,
+    isSuccess,
+    isPending,
+    isError,
+    error,
+  } = useRegisterUser();
 
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
@@ -32,10 +34,10 @@ export const RegisterPage: React.FC = () => {
   const [errors, setErrors] = useState<FormErrors>({});
 
   useEffect(() => {
-    if (registerStatus === 'succeeded') {
+    if (isSuccess) {
       navigate(pageRoutes.login);
     }
-  }, [registerStatus, navigate]);
+  }, [isSuccess, navigate]);
 
   const validateForm = (): boolean => {
     let formErrors: FormErrors = {};
@@ -54,7 +56,7 @@ export const RegisterPage: React.FC = () => {
     e.preventDefault();
     if (validateForm()) {
       try {
-        await mutation.mutate({ email, password, name });
+        registerUser({ email, password, name });
         console.log('가입 성공!');
         navigate(pageRoutes.login);
       } catch (error) {
@@ -133,16 +135,10 @@ export const RegisterPage: React.FC = () => {
               <p className="text-sm text-red-500">{errors.password}</p>
             )}
           </div>
-          <Button
-            type="submit"
-            className="w-full"
-            disabled={registerStatus === 'loading'}
-          >
-            {registerStatus === 'loading' ? '가입 중...' : '회원가입'}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? '가입 중...' : '회원가입'}
           </Button>
-          {registerError && (
-            <p className="text-sm text-red-500">{registerError}</p>
-          )}
+          {isError && <p className="text-sm text-red-500">{error.message}</p>}
         </form>
       </div>
     </Layout>

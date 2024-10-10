@@ -17,22 +17,20 @@ import { LogoutButton } from './LogoutButton';
 export const NavigationBar = () => {
   const navigate = useNavigate();
   const { isOpen, openModal, closeModal } = useModal();
-  const { isLogin, user } = useAuthStore();
-  const { cart } = useCartStore();
-  const initCart = useCartStore((state) => state.initCart);
+  const { isLogin, user, logout } = useAuthStore();
+  const { cart, initCart } = useCartStore();
 
   useEffect(() => {
     if (isLogin && user && cart.length === 0) {
       initCart(user.uid);
     }
-  }, [isLogin, user, cart.length]);
+  }, [isLogin, user, cart.length]); // dispatch 뻄
 
   const handleLogout = () => {
     openModal();
   };
 
   const handleConfirmLogout = () => {
-    const { logout } = useAuthStore();
     logout();
     Cookies.remove('accessToken');
     closeModal();
