@@ -11,8 +11,7 @@ import { pageRoutes } from '@/apiRoutes';
 import { EMAIL_PATTERN } from '@/constants';
 import { auth } from '@/firebase';
 import { Layout, authStatusType } from '@/pages/common/components/Layout';
-import { setIsLogin, setUser } from '@/store/auth/authSlice';
-import { useAppDispatch } from '@/store/hooks';
+import { useAuthStore } from '@/store_zustand/auth/authStore';
 
 interface FormErrors {
   email?: string;
@@ -22,7 +21,7 @@ interface FormErrors {
 
 export const LoginPage = () => {
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  // const dispatch = useAppDispatch();
 
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
@@ -62,15 +61,16 @@ export const LoginPage = () => {
 
         Cookies.set('accessToken', token, { expires: 7 });
 
-        dispatch(setIsLogin(true));
+        // Zustand를 사용하여 상태 업데이트
+        const { setIsLogin, setUser } = useAuthStore();
+
+        setIsLogin(true);
         if (user) {
-          dispatch(
-            setUser({
-              uid: user.uid,
-              email: user.email ?? '',
-              displayName: user.displayName ?? '',
-            })
-          );
+          setUser({
+            uid: user.uid,
+            email: user.email ?? '',
+            displayName: user.displayName ?? '',
+          });
         }
 
         navigate(pageRoutes.main);

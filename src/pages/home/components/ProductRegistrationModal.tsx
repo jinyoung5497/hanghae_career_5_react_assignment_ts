@@ -18,8 +18,9 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { ALL_CATEGORY_ID, categories } from '@/constants';
 import { createNewProduct, initialProductState } from '@/helpers/product';
-import { useAppDispatch } from '@/store/hooks';
+import { useAddProduct } from '@/hooks/useProduct';
 import { addProduct } from '@/store/product/productsActions';
+import { useCartStore } from '@/store_zustand/cart/cartStore';
 import { uploadImage } from '@/utils/imageUpload';
 import { ChangeEvent, useState } from 'react';
 
@@ -32,7 +33,14 @@ interface ProductRegistrationModalProps {
 export const ProductRegistrationModal: React.FC<
   ProductRegistrationModalProps
 > = ({ isOpen, onClose, onProductAdded }) => {
-  const dispatch = useAppDispatch();
+  const {
+    mutate: addProduct,
+    isSuccess,
+    isPending,
+    isError,
+    error,
+  } = useAddProduct();
+
   const [product, setProduct] = useState<NewProductDTO>(initialProductState);
 
   const handleChange = (
@@ -62,7 +70,7 @@ export const ProductRegistrationModal: React.FC<
       }
 
       const newProduct = createNewProduct(product, imageUrl);
-      await dispatch(addProduct(newProduct));
+      await addProduct(newProduct);
       onClose();
       onProductAdded();
     } catch (error) {

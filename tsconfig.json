@@ -1,24 +1,23 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    "allowJs": false,
-    "skipLibCheck": true,
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "baseUrl": ".",
+    "target": "ESNext", // 최신 자바스크립트 기능 사용
+    "lib": ["DOM", "DOM.Iterable", "ESNext"], // 사용할 라이브러리들
+    "allowJs": false, // JS 파일 허용 여부
+    "skipLibCheck": true, // 라이브러리 타입 검사 생략 (빌드 속도 향상)
+    "esModuleInterop": true, // CommonJS 모듈과의 호환성 (true로 변경)
+    "allowSyntheticDefaultImports": true, // default export가 없는 모듈도 기본값으로 가져올 수 있게 함
+    "strict": true, // 엄격한 타입 검사 모드
+    "forceConsistentCasingInFileNames": true, // 파일 이름 대소문자 일관성 유지
+    "module": "ESNext", // ESNext 모듈 시스템 사용
+    "moduleResolution": "Node", // Node 방식으로 모듈 해석
+    "resolveJsonModule": true, // JSON 모듈을 불러올 수 있게 설정
+    "isolatedModules": true, // 개별 모듈로 트랜스파일 (빠른 빌드)
+    "noEmit": true, // 출력 파일 생성하지 않음 (트랜스파일만)
+    "jsx": "react-jsx", // React 17+ JSX 변환 사용
+    "baseUrl": ".", // 프로젝트 루트 디렉터리
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"] // '@'를 'src'로 매핑
     }
   },
-  "include": ["src"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src"] // 'src' 디렉터리 포함// Node.js 설정 파일 참조
 }
