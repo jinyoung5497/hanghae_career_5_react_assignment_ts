@@ -1,5 +1,5 @@
 import { NewProductDTO } from '@/api/dtos/productDTO';
-import { ChangeEvent } from 'react';
+import { ChangeEvent, useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -22,7 +22,6 @@ import { createNewProduct, initialProductState } from '@/helpers/product';
 import { useAddProduct } from '@/hooks/useProduct';
 import { useToastStore } from '@/store_zustand/toast/toastStore';
 import { uploadImage } from '@/utils/imageUpload';
-import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 interface ProductRegistrationModalProps {
@@ -66,52 +65,78 @@ export const ProductRegistrationModal: React.FC<
     name: '',
   });
 
-  const onSubmit = async (data: FormFields) => {
-    try {
-      if (!imageFile) {
-        throw new Error('이미지를 선택해야 합니다.');
-      }
-
-      const imageUrl = await uploadImage(imageFile);
-      if (!imageUrl) {
-        throw new Error('이미지 업로드에 실패했습니다.');
-      }
-
-      // NewProductDTO에 image 속성 추가
-      const newProduct: NewProductDTO = {
-        title: data.title,
-        price: data.price,
-        description: data.description,
-        category: { id: selectedCategory.id, name: selectedCategory.name },
-        image: imageUrl,
-      };
-
-      await addProduct(newProduct);
-      onClose();
-      onProductAdded();
-      setIsToast();
-      setMessage('상품등록 성공!');
-      reset(); // 폼 리셋
-    } catch (error) {
-      console.error('물품 등록에 실패했습니다.', error);
-      setIsToast();
-      setMessage('상품등록 실패!');
-    }
-  };
-
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      setImageFile(files[0]);
-    }
-  };
-
-  const handleCategoryChange = (id: string) => {
+  // handleCategoryChange 함수를 useCallback으로 최적화
+  const handleCategoryChange = useCallback((id: string) => {
     const selected = categories.find((category) => category.id === id);
     if (selected) {
       setSelectedCategory({ id: selected.id, name: selected.name });
     }
-  };
+  }, []);
+
+  // onSubmit 함수도 useCallback으로 최적화
+  const onSubmit = useCallback(
+    async (data: FormFields) => {
+      try {
+        if (!imageFile) {
+          throw new Error('이미지를 선택해야 합니다.');
+        }
+
+        const imageUrl = await uploadImage(imageFile);
+        if (!imageUrl) {
+          throw new Error('이미지 업로드에 실패했습니다.');
+        }
+
+        // NewProductDTO에 image 속성 추가
+        const newProduct: NewProductDTO = {
+          title: data.title,
+          price: data.price,
+          description: data.description,
+          category: { id: selectedCategory.id, name: selectedCategory.name },
+          image: imageUrl,
+        };
+
+        await addProduct(newProduct);
+        onClose();
+        onProductAdded();
+        setIsToast();
+        setMessage('상품등록 성공!');
+        reset(); // 폼 리셋
+      } catch (error) {
+        console.error('물품 등록에 실패했습니다.', error);
+        setIsToast();
+        setMessage('상품등록 실패!');
+      }
+    },
+    [
+      imageFile,
+      selectedCategory,
+      addProduct,
+      onClose,
+      onProductAdded,
+      reset,
+      setIsToast,
+      setMessage,
+    ]
+  );
+
+  // handleImageChange 함수도 useCallback으로 최적화
+  const handleImageChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setImageFile(files[0]);
+    }
+  }, []);
+
+  // 카테고리 목록을 useMemo로 메모이제이션
+  const categoryItems = useMemo(() => {
+    return categories
+      .filter((category) => category.id !== ALL_CATEGORY_ID)
+      .map((category) => (
+        <SelectItem key={category.id} value={category.id}>
+          {category.name}
+        </SelectItem>
+      ));
+  }, []);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -156,15 +181,7 @@ export const ProductRegistrationModal: React.FC<
               <SelectTrigger>
                 <SelectValue placeholder="카테고리 선택" />
               </SelectTrigger>
-              <SelectContent>
-                {categories
-                  .filter((category) => category.id !== ALL_CATEGORY_ID)
-                  .map((category) => (
-                    <SelectItem key={category.id} value={category.id}>
-                      {category.name}
-                    </SelectItem>
-                  ))}
-              </SelectContent>
+              <SelectContent>{categoryItems}</SelectContent>
             </Select>
 
             <Input
