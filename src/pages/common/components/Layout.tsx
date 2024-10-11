@@ -8,7 +8,6 @@ import Toast from './Toast';
 import { useToastStore } from '@/store_zustand/toast/toastStore';
 import Cookies from 'js-cookie';
 import { auth } from '@/firebase';
-import { setIsLogin, setUser } from '@/store/auth/authSlice';
 
 export const authStatusType = {
   NEED_LOGIN: 'NEED_LOGIN',
@@ -27,7 +26,7 @@ export const Layout: React.FC<LayoutProps> = ({
   containerClassName = '',
   authStatus = authStatusType.COMMON,
 }) => {
-  const { isLogin } = useAuthStore();
+  const { isLogin, setIsLogin, setUser } = useAuthStore();
   const { message } = useToastStore();
 
   if (authStatus === authStatusType.NEED_LOGIN && !isLogin) {
@@ -56,7 +55,6 @@ export const Layout: React.FC<LayoutProps> = ({
                 displayName: user.displayName ?? '',
               });
               setIsLogin(true);
-              console.log('first');
             }
           })
           .catch((error) => {
@@ -71,14 +69,6 @@ export const Layout: React.FC<LayoutProps> = ({
     return () => unsubscribe();
   }, [setIsLogin, setUser]);
 
-  // useEffect(() => {
-  //   setIsLogin(true);
-  // }, [setIsLogin]);
-
-  useEffect(() => {
-    console.log(isLogin);
-  }, [isLogin]);
-
   return (
     <div>
       <div className="fixed left-1/2 flex right-10 z-[9999]">
@@ -87,7 +77,6 @@ export const Layout: React.FC<LayoutProps> = ({
       <NavigationBar />
       <div className="flex flex-col min-h-screen mt-24">
         <main className="flex-grow">
-          <button onClick={() => setIsLogin(true)}>hi</button>
           <div className={`container mx-auto px-4 ${containerClassName}`}>
             {children}
           </div>
