@@ -8,12 +8,10 @@ import { useAuthStore } from '@/store_zustand/auth/authStore';
 import { useCartStore } from '@/store_zustand/cart/cartStore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useModal } from '@/hooks/useModal';
-import { useAppDispatch } from '@/store/hooks';
 import { CartButton } from './CartButton';
 import { ConfirmModal } from './ConfirmModal';
 import { LoginButton } from './LoginButton';
 import { LogoutButton } from './LogoutButton';
-import { useToastStore } from '@/store_zustand/toast/toastStore';
 
 export const NavigationBar = () => {
   const navigate = useNavigate();

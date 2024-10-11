@@ -1,4 +1,5 @@
 import { NewProductDTO } from '@/api/dtos/productDTO';
+import { ChangeEvent } from 'react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -19,11 +20,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { ALL_CATEGORY_ID, categories } from '@/constants';
 import { createNewProduct, initialProductState } from '@/helpers/product';
 import { useAddProduct } from '@/hooks/useProduct';
-import { addProduct } from '@/store/product/productsActions';
-import { useCartStore } from '@/store_zustand/cart/cartStore';
 import { useToastStore } from '@/store_zustand/toast/toastStore';
 import { uploadImage } from '@/utils/imageUpload';
-import { ChangeEvent, useState } from 'react';
+import { useState } from 'react';
+import { useForm } from 'react-hook-form';
 
 interface ProductRegistrationModalProps {
   isOpen: boolean;
@@ -31,52 +31,67 @@ interface ProductRegistrationModalProps {
   onProductAdded: () => void;
 }
 
+type FormFields = {
+  title: string;
+  price: number;
+  description: string;
+  categoryId: string;
+  image: FileList;
+};
+
 export const ProductRegistrationModal: React.FC<
   ProductRegistrationModalProps
 > = ({ isOpen, onClose, onProductAdded }) => {
-  const {
-    mutate: addProduct,
-    isSuccess,
-    isPending,
-    isError,
-    error,
-  } = useAddProduct();
+  const { mutate: addProduct } = useAddProduct();
   const { setIsToast, setMessage } = useToastStore();
 
-  const [product, setProduct] = useState<NewProductDTO>(initialProductState);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<FormFields>({
+    defaultValues: {
+      title: '',
+      price: 0,
+      description: '',
+      categoryId: '',
+      image: undefined,
+    },
+  });
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ): void => {
-    const { name, value } = e.target;
-    setProduct((prev) => ({ ...prev, [name]: value }));
-  };
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState({
+    id: '',
+    name: '',
+  });
 
-  const handleImageChange = (e: ChangeEvent<HTMLInputElement>): void => {
-    const files = e.target.files;
-    if (files && files.length > 0) {
-      const file = files[0];
-      setProduct((prev) => ({ ...prev, image: file }));
-    }
-  };
-
-  const handleSubmit = async (): Promise<void> => {
+  const onSubmit = async (data: FormFields) => {
     try {
-      if (!product.image) {
+      if (!imageFile) {
         throw new Error('이미지를 선택해야 합니다.');
       }
 
-      const imageUrl = await uploadImage(product.image as File);
+      const imageUrl = await uploadImage(imageFile);
       if (!imageUrl) {
         throw new Error('이미지 업로드에 실패했습니다.');
       }
 
-      const newProduct = createNewProduct(product, imageUrl);
+      // NewProductDTO에 image 속성 추가
+      const newProduct: NewProductDTO = {
+        title: data.title,
+        price: data.price,
+        description: data.description,
+        category: { id: selectedCategory.id, name: selectedCategory.name },
+        image: imageUrl,
+      };
+
       await addProduct(newProduct);
       onClose();
       onProductAdded();
       setIsToast();
       setMessage('상품등록 성공!');
+      reset(); // 폼 리셋
     } catch (error) {
       console.error('물품 등록에 실패했습니다.', error);
       setIsToast();
@@ -84,11 +99,18 @@ export const ProductRegistrationModal: React.FC<
     }
   };
 
-  const handleCategoryChange = (value: string): void => {
-    setProduct((prev) => ({
-      ...prev,
-      category: { ...prev.category, id: value },
-    }));
+  const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      setImageFile(files[0]);
+    }
+  };
+
+  const handleCategoryChange = (id: string) => {
+    const selected = categories.find((category) => category.id === id);
+    if (selected) {
+      setSelectedCategory({ id: selected.id, name: selected.name });
+    }
   };
 
   return (
@@ -97,55 +119,66 @@ export const ProductRegistrationModal: React.FC<
         <DialogHeader>
           <DialogTitle>상품 등록</DialogTitle>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <Input
-            name="title"
-            placeholder="상품명"
-            onChange={handleChange}
-            value={product.title || ''}
-          />
-          <Input
-            name="price"
-            type="number"
-            placeholder="가격"
-            onChange={handleChange}
-            value={product.price || ''}
-          />
-          <Textarea
-            name="description"
-            className="resize-none"
-            placeholder="상품 설명"
-            onChange={handleChange}
-            value={product.description || ''}
-          />
-          <Select
-            name="categoryId"
-            onValueChange={handleCategoryChange}
-            value={product.category.id || ''}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="카테고리 선택" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories
-                .filter((category) => category.id !== ALL_CATEGORY_ID)
-                .map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-            </SelectContent>
-          </Select>
-          <Input
-            className="cursor-pointer"
-            type="file"
-            accept="image/*"
-            onChange={handleImageChange}
-          />
-        </div>
-        <DialogFooter>
-          <Button onClick={handleSubmit}>등록</Button>
-        </DialogFooter>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <div className="grid gap-4 py-4">
+            <Input
+              {...register('title', { required: '상품명을 입력해야 합니다.' })}
+              placeholder="상품명"
+            />
+            {errors.title && <p>{errors.title.message}</p>}
+
+            <Input
+              {...register('price', {
+                required: '가격을 입력해야 합니다.',
+                pattern: {
+                  value: /^[0-9]+$/,
+                  message: '숫자만 입력 가능합니다.',
+                },
+              })}
+              type="number"
+              placeholder="가격"
+            />
+            {errors.price && <p>{errors.price.message}</p>}
+
+            <Textarea
+              {...register('description', {
+                required: '설명을 입력해야 합니다.',
+              })}
+              className="resize-none"
+              placeholder="상품 설명"
+            />
+            {errors.description && <p>{errors.description.message}</p>}
+
+            <Select
+              onValueChange={handleCategoryChange}
+              value={selectedCategory.id}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="카테고리 선택" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories
+                  .filter((category) => category.id !== ALL_CATEGORY_ID)
+                  .map((category) => (
+                    <SelectItem key={category.id} value={category.id}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+              </SelectContent>
+            </Select>
+
+            <Input
+              className="cursor-pointer"
+              type="file"
+              accept="image/*"
+              onChange={handleImageChange}
+            />
+            {errors.image && <p>{errors.image.message}</p>}
+          </div>
+          <DialogFooter>
+            <Button type="submit">등록</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
