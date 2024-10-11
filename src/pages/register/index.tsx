@@ -10,6 +10,7 @@ import { EMAIL_PATTERN } from '@/constants';
 import { Layout, authStatusType } from '@/pages/common/components/Layout';
 
 import { useRegisterUser } from '@/hooks/useAuth';
+import { useToastStore } from '@/store_zustand/toast/toastStore';
 
 interface FormErrors {
   name?: string;
@@ -32,6 +33,7 @@ export const RegisterPage: React.FC = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errors, setErrors] = useState<FormErrors>({});
+  const { setIsToast, setMessage } = useToastStore();
 
   useEffect(() => {
     if (isSuccess) {
@@ -57,9 +59,13 @@ export const RegisterPage: React.FC = () => {
     if (validateForm()) {
       try {
         registerUser({ email, password, name });
+        setIsToast();
+        setMessage('회원 가입 성공!');
         console.log('가입 성공!');
         navigate(pageRoutes.login);
       } catch (error) {
+        setIsToast();
+        setMessage('회원 가입 실패!');
         console.error(
           '회원가입 중 오류가 발생했습니다. 다시 시도해 주세요.',
           error

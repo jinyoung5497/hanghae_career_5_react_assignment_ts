@@ -4,7 +4,7 @@ import { Label } from '@/components/ui/label';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import Cookies from 'js-cookie';
 import { Lock, Mail } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { pageRoutes } from '@/apiRoutes';
@@ -12,6 +12,7 @@ import { EMAIL_PATTERN } from '@/constants';
 import { auth } from '@/firebase';
 import { Layout, authStatusType } from '@/pages/common/components/Layout';
 import { useAuthStore } from '@/store_zustand/auth/authStore';
+import { useToastStore } from '@/store_zustand/toast/toastStore';
 
 interface FormErrors {
   email?: string;
@@ -26,6 +27,7 @@ export const LoginPage = () => {
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errors, setErrors] = useState<FormErrors>({});
+  const { setIsToast, setMessage } = useToastStore();
 
   const handleClickRegister = () => {
     navigate(pageRoutes.register);
@@ -61,6 +63,9 @@ export const LoginPage = () => {
 
         Cookies.set('accessToken', token, { expires: 7 });
 
+        setIsToast();
+        setMessage('로그인 성공');
+
         setIsLogin(true);
         if (user) {
           setUser({
@@ -76,6 +81,8 @@ export const LoginPage = () => {
           '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
           error
         );
+        setIsToast();
+        setMessage('로그인 실패');
         setErrors({
           form: '로그인에 실패했습니다. 이메일과 비밀번호를 확인해주세요.',
         });

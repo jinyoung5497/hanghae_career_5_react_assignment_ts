@@ -1,13 +1,12 @@
 import { create } from 'zustand';
+import { CartItem } from '@/types/cartType';
 import {
+  calculateTotal,
   getCartFromLocalStorage,
   resetCartAtLocalStorage,
   setCartToLocalStorage,
-  calculateTotal,
 } from './cartUtils';
-import { CartItem } from '@/types/cartType'; // Assuming you have a CartItem type defined
 
-// Define the state shape for the cart store
 interface CartState {
   cart: CartItem[];
   totalCount: number;
@@ -18,53 +17,47 @@ interface CartState {
   removeCartItem: (itemId: string, userId: string) => void;
   changeCartItemCount: (itemId: string, count: number, userId: string) => void;
 }
-
-// Create the Zustand store with type annotations
 export const useCartStore = create<CartState>((set, get) => ({
   cart: [],
   totalCount: 0,
   totalPrice: 0,
-
-  // Initialize the cart with items from local storage
   initCart: (userId) => {
-    if (!userId) return;
+    // if (!userId) return;
     const prevCartItems = getCartFromLocalStorage(userId);
     const total = calculateTotal(prevCartItems);
-    set({
+    set(() => ({
       cart: prevCartItems,
       totalCount: total.totalCount,
       totalPrice: total.totalPrice,
-    });
+    }));
   },
-
-  // Reset the cart
-  resetCart: (userId: string) => {
+  resetCart: (userId) => {
     resetCartAtLocalStorage(userId);
-    set({
+    set(() => ({
       cart: [],
       totalCount: 0,
       totalPrice: 0,
-    });
+    }));
   },
 
-  // Add an item to the cart
   addCartItem: (item, userId, count) => {
-    const cart = get().cart || [];
-    const existingItemIndex = cart.findIndex(
+    const state = get();
+    const existingItemIndex = state.cart.findIndex(
       (cartItem) => cartItem.id === item.id
     );
-    let updatedCart: CartItem[];
+
+    let updatedCart;
 
     if (existingItemIndex !== -1) {
       // Update the quantity of the existing item
-      updatedCart = cart.map((cartItem, index) =>
+      updatedCart = state.cart.map((cartItem, index) =>
         index === existingItemIndex
           ? { ...cartItem, count: cartItem.count + count }
           : cartItem
       );
     } else {
-      // Add a new item to the cart
-      updatedCart = [...cart, { ...item, count }];
+      // Add new item to the cart
+      updatedCart = [...state.cart, { ...item, count }];
     }
 
     const total = calculateTotal(updatedCart);
@@ -73,38 +66,36 @@ export const useCartStore = create<CartState>((set, get) => ({
       totalCount: total.totalCount,
       totalPrice: total.totalPrice,
     });
+
     setCartToLocalStorage(updatedCart, userId);
   },
 
-  // Remove an item from the cart
-  removeCartItem: (itemId: string, userId: string) => {
-    const cart = get().cart || [];
-    const updatedCart = cart.filter((item) => item.id !== itemId);
-
-    const total = calculateTotal(updatedCart);
-    set({
-      cart: updatedCart,
+  removeCartItem: (itemId, userId) => {
+    const state = get();
+    const filterCart = state.cart.filter((item) => item.id !== itemId);
+    const total = calculateTotal(filterCart);
+    set(() => ({
+      cart: filterCart,
       totalCount: total.totalCount,
       totalPrice: total.totalPrice,
-    });
-    setCartToLocalStorage(updatedCart, userId);
+    }));
+    setCartToLocalStorage(filterCart, userId);
   },
-
-  // Change the quantity of an item in the cart
-  changeCartItemCount: (itemId: string, count: number, userId: string) => {
-    const cart = get().cart || [];
-    const updatedCart = cart.map((item) =>
-      item.id === itemId ? { ...item, count } : item
-    );
-
-    const total = calculateTotal(updatedCart);
-    set({
-      cart: updatedCart,
+  changeCartItemCount: (itemId, count, userId) => {
+    const state = get();
+    const itemIndex = state.cart.findIndex((item) => item.id === itemId);
+    let changeCart: CartItem[] = state.cart;
+    if (itemIndex !== -1) {
+      changeCart = state.cart.map((cartItem, index) =>
+        index === itemIndex ? { ...cartItem, count } : cartItem
+      );
+    }
+    const total = calculateTotal(changeCart);
+    set(() => ({
+      cart: changeCart,
       totalCount: total.totalCount,
       totalPrice: total.totalPrice,
-    });
-    setCartToLocalStorage(updatedCart, userId);
+    }));
+    setCartToLocalStorage(changeCart, userId);
   },
 }));
-
-export default useCartStore;

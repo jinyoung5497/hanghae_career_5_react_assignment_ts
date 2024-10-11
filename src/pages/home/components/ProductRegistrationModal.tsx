@@ -21,6 +21,7 @@ import { createNewProduct, initialProductState } from '@/helpers/product';
 import { useAddProduct } from '@/hooks/useProduct';
 import { addProduct } from '@/store/product/productsActions';
 import { useCartStore } from '@/store_zustand/cart/cartStore';
+import { useToastStore } from '@/store_zustand/toast/toastStore';
 import { uploadImage } from '@/utils/imageUpload';
 import { ChangeEvent, useState } from 'react';
 
@@ -40,6 +41,7 @@ export const ProductRegistrationModal: React.FC<
     isError,
     error,
   } = useAddProduct();
+  const { setIsToast, setMessage } = useToastStore();
 
   const [product, setProduct] = useState<NewProductDTO>(initialProductState);
 
@@ -73,8 +75,12 @@ export const ProductRegistrationModal: React.FC<
       await addProduct(newProduct);
       onClose();
       onProductAdded();
+      setIsToast();
+      setMessage('상품등록 성공!');
     } catch (error) {
       console.error('물품 등록에 실패했습니다.', error);
+      setIsToast();
+      setMessage('상품등록 실패!');
     }
   };
 

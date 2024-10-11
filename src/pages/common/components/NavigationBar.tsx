@@ -13,6 +13,7 @@ import { CartButton } from './CartButton';
 import { ConfirmModal } from './ConfirmModal';
 import { LoginButton } from './LoginButton';
 import { LogoutButton } from './LogoutButton';
+import { useToastStore } from '@/store_zustand/toast/toastStore';
 
 export const NavigationBar = () => {
   const navigate = useNavigate();

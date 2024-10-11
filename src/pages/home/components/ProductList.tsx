@@ -94,14 +94,14 @@ export const ProductList: React.FC<ProductListProps> = ({
     loadProductsData(true);
   };
 
-  const firstProductImage = data?.products[0].image;
+  // const firstProductImage = data?.products[0].image;
 
-  useEffect(() => {
-    if (firstProductImage) {
-      const img = new Image();
-      img.src = firstProductImage;
-    }
-  }, [firstProductImage]);
+  // useEffect(() => {
+  //   if (firstProductImage) {
+  //     const img = new Image();
+  //     img.src = firstProductImage;
+  //   }
+  // }, [firstProductImage]);
 
   return (
     <>

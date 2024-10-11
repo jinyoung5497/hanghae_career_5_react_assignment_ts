@@ -13,17 +13,10 @@ import { Layout, authStatusType } from '@/pages/common/components/Layout';
 import { ItemList } from '@/pages/purchase/components/ItemList';
 import { Payment } from '@/pages/purchase/components/Payment';
 import { ShippingInformationForm } from '@/pages/purchase/components/ShippingInformationForm';
-import { selectUser } from '@/store/auth/authSelectors';
-import { selectCart } from '@/store/cart/cartSelectors';
 import { useCartStore } from '@/store_zustand/cart/cartStore';
-import { useAppDispatch } from '@/store/hooks';
-import {
-  purchaseFailure,
-  purchaseStart,
-  purchaseSuccess,
-} from '@/store/purchase/purchaseSlice';
 import { usePurchaseStore } from '@/store_zustand/purchase/purchaseStore';
 import { useAuthStore } from '@/store_zustand/auth/authStore';
+import { useToastStore } from '@/store_zustand/toast/toastStore';
 
 export interface FormData {
   name: string;
@@ -38,19 +31,13 @@ export interface FormErrors {
 }
 
 export const Purchase: React.FC = () => {
-  // const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { cart } = useCartStore();
   const { isLoading } = usePurchaseStore();
-  const resetCart = useCartStore((state) => state.resetCart);
-  const { purchaseStart, purchaseSuccess, purchaseFailure } = usePurchaseStore(
-    (state) => ({
-      purchaseStart: state.purchaseStart,
-      purchaseSuccess: state.purchaseSuccess,
-      purchaseFailure: state.purchaseFailure,
-    })
-  );
+  const { resetCart } = useCartStore();
+  const { purchaseStart, purchaseSuccess, purchaseFailure } =
+    usePurchaseStore();
 
   const [formData, setFormData] = useState<FormData>({
     name: user?.displayName ?? '',
@@ -65,6 +52,7 @@ export const Purchase: React.FC = () => {
   });
 
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const { setIsToast, setMessage } = useToastStore();
 
   useEffect(() => {
     const { address, phone } = formData;
@@ -109,16 +97,22 @@ export const Purchase: React.FC = () => {
         resetCart(user.uid);
       }
       console.log('구매 성공!');
+      setIsToast();
+      setMessage('구매 성공!');
       navigate(pageRoutes.main);
     } catch (err) {
       if (err instanceof Error) {
         purchaseFailure(err.message);
+        setIsToast();
+        setMessage('잠시 문제가 발생했습니다! 다시 시도해 주세요.');
         console.error(
           '잠시 문제가 발생했습니다! 다시 시도해 주세요.',
           err.message
         );
       } else {
         purchaseFailure('알 수 없는 오류가 발생했습니다.');
+        setIsToast();
+        setMessage('알 수 없는 오류가 발생했습니다.');
         console.error('잠시 문제가 발생했습니다! 다시 시도해 주세요.');
       }
     }
